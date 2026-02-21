@@ -3,6 +3,7 @@ import sys
 import os
 import datetime
 import random
+import getpass
 import time # For potential sleep, though QTimer is better
 from PySide6 import QtWidgets, QtCore, QtGui
 from PySide6.QtMultimedia import QSoundEffect # For sound effects
@@ -125,6 +126,9 @@ TRANSLATIONS = {
     'LANG_SELECT_MSG':        {'en': "Please select your preferred language.", 'ko': "선호하는 언어를 선택하세요."},
     'API_ERR_TITLE':          {'en': "API Error", 'ko': "API 오류"},
     'API_INIT_ERR_MSG':       {'en': "Failed to initialize Gemini AI client: {e}\nFalling back to placeholder responses.", 'ko': "Gemini AI 클라이언트 초기화 실패: {e}\n대체 응답 모드로 전환합니다."},
+    'API_KEY_REQUIRED_TITLE': {'en': "Gemini API Key Required", 'ko': "Gemini API 키 필요"},
+    'API_KEY_REQUIRED_MSG':   {'en': "Enter your Google AI API key (it will be masked):", 'ko': "Google AI API 키를 입력하세요 (마스킹 처리됨):"},
+    'API_KEY_TERMINAL_PROMPT':{'en': "\n--- Gemini API Key Required ---\nCreate a file named 'api_key.txt' or enter your key below.", 'ko': "\n--- Gemini API 키 필요 ---\n'api_key.txt' 파일을 생성하거나 아래에 키를 입력하세요."},
     'API_KEY_MISSING_TITLE':  {'en': "API Key Missing", 'ko': "API 키 없음"},
     'API_KEY_MISSING_MSG':    {'en': "No valid Gemini API Key provided. LLM features disabled.\nFalling back to placeholder responses.", 'ko': "유효한 Gemini API 키가 제공되지 않았습니다. LLM 기능이 비활성화됩니다.\n대체 응답 모드로 전환합니다."},
     'LIB_MISSING_TITLE':      {'en': "Missing Library", 'ko': "라이브러리 누락"},
@@ -393,18 +397,35 @@ class CognitoWindow(QtWidgets.QMainWindow):
                 api_key = None
 
             if not api_key:
-                 print("\n--- Gemini API Key Required ---")
-                 print("Create a file named 'api_key.txt' in the same directory as the script")
-                 print("containing only your Google AI API key, or paste it below.")
-                 try:
-                     # Try getting input, handle if not possible (e.g., running without console)
-                     api_key = input("API Key: ").strip()
-                 except EOFError:
-                     print("No interactive console available to input API key.")
-                     api_key = None
-                 except Exception as e:
-                     print(f"Error reading API key from input: {e}")
-                     api_key = None
+                 # Prefer GUI dialog for security (masking) and better UX
+                 gui_available = bool(QtWidgets.QApplication.instance())
+                 user_cancelled_gui = False
+
+                 if gui_available:
+                     api_key, ok = QtWidgets.QInputDialog.getText(
+                         self,
+                         self.tr('API_KEY_REQUIRED_TITLE'),
+                         self.tr('API_KEY_REQUIRED_MSG'),
+                         QtWidgets.QLineEdit.Password
+                     )
+                     if ok:
+                         api_key = api_key.strip()
+                     else:
+                         user_cancelled_gui = True
+                         api_key = None
+
+                 # Fallback to secure terminal input only if GUI was not available or not explicitly cancelled
+                 if not api_key and not user_cancelled_gui:
+                     print(self.tr('API_KEY_TERMINAL_PROMPT'))
+                     try:
+                         # Securely get input using getpass
+                         api_key = getpass.getpass("API Key (masked): ").strip()
+                     except (EOFError, ImportError):
+                         print("No interactive console available to input API key.")
+                         api_key = None
+                     except Exception as e:
+                         print(f"Error reading API key from input: {e}")
+                         api_key = None
 
 
             if api_key:
