@@ -1594,9 +1594,6 @@ class CognitoWindow(QtWidgets.QMainWindow):
         elif use_llm and self.llm_model:
             # Combine system instruction, language hint, and user prompt for the LLM
             lang_instruction = self.tr('RESPOND_LANG')
-            # Construct history string (optional, depending on model/needs)
-            history_string = "\n".join(self.history[-5:]) # Send last 5 turns for context
-            # final_prompt = f"{system_instruction}{lang_instruction}\n\nPrevious Conversation:\n{history_string}\n\nUser Prompt: \"{prompt_for_llm}\""
             final_prompt = f"{system_instruction}{lang_instruction}\n\nUser: \"{prompt_for_llm}\"" # Simpler prompt without explicit history
 
 
