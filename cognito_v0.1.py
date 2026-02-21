@@ -4,6 +4,7 @@ import os
 import datetime
 import random
 import time # For potential sleep, though QTimer is better
+import getpass
 from PySide6 import QtWidgets, QtCore, QtGui
 from PySide6.QtMultimedia import QSoundEffect # For sound effects
 
@@ -398,7 +399,20 @@ class CognitoWindow(QtWidgets.QMainWindow):
                  print("containing only your Google AI API key, or paste it below.")
                  try:
                      # Try getting input, handle if not possible (e.g., running without console)
-                     api_key = input("API Key: ").strip()
+                     if QtWidgets.QApplication.instance():
+                         key, ok = QtWidgets.QInputDialog.getText(
+                             None,
+                             self.tr('API_KEY_MISSING_TITLE'),
+                             "Enter Gemini API Key:",
+                             QtWidgets.QLineEdit.EchoMode.Password
+                         )
+                         if ok and key:
+                             api_key = key.strip()
+                         else:
+                             print("API Key input cancelled.")
+                             api_key = None
+                     else:
+                         api_key = getpass.getpass("API Key: ").strip()
                  except EOFError:
                      print("No interactive console available to input API key.")
                      api_key = None
