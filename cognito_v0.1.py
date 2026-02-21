@@ -934,8 +934,7 @@ class CognitoWindow(QtWidgets.QMainWindow):
         self.chat_display.ensureCursorVisible()
 
         # Add to history AFTER displaying, unless it's just a yell fragment
-        yell_keys = ['YELL_MSG_1', 'YELL_MSG_2', 'YELL_MSG_3', 'YELL_MSG_4', 'YELL_MSG_5']
-        is_yell_msg = any(text == self.tr(key) for key in yell_keys)
+        is_yell_msg = any(text == self.tr(key) for key in self.YELL_KEYS)
         if not is_yell_msg and not text == "......": # Don't log transient yells or ellipses
             self.history.append(f"AURA: {text}")
 
