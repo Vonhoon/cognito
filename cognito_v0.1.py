@@ -1790,12 +1790,6 @@ if __name__ == "__main__":
 
     # --- Language Selection ---
     lang_dialog = LanguageSelectionDialog()
-    # Center the dialog on the screen
-    # screen = app.primaryScreen()
-    # if screen:
-    #     center_point = screen.availableGeometry().center()
-    #     lang_dialog.move(center_point.x() - lang_dialog.width() / 2, center_point.y() - lang_dialog.height() / 2)
-
     if lang_dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
         selected_lang = lang_dialog.selected_language
         if selected_lang:
