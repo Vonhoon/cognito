@@ -3,7 +3,6 @@ import sys
 import os
 import datetime
 import random
-import time # For potential sleep, though QTimer is better
 from PySide6 import QtWidgets, QtCore, QtGui
 from PySide6.QtMultimedia import QSoundEffect # For sound effects
 
