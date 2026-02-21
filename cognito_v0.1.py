@@ -1635,7 +1635,8 @@ class CognitoWindow(QtWidgets.QMainWindow):
                          print(f"Prompt Feedback: {llm_response.prompt_feedback}")
 
 
-                print(f"LLM Raw Response Text: '{response_text}'") # Log raw response
+                # print(f"LLM Raw Response Text: '{response_text}'") # Log raw response - REMOVED FOR SECURITY
+                print("LLM Response received (content hidden for security).")
 
             except Exception as e:
                  print(f"Error calling LLM API: {e}")
