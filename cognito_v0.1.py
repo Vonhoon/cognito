@@ -800,8 +800,6 @@ class CognitoWindow(QtWidgets.QMainWindow):
             # Basic Markdown-like conversion for bold and newline
             body_html = body_raw.replace('**', '<b>').replace('\n', '<br>')
             formatted_text = (f"<div style='{box_style}'>"
-                              # f"<p style='{title_style}'>{title}</p>" # Optional: Repeat title
-                              # f"<hr style='{hr_style}'>" # Optional: Separator
                               f"<p style='{text_style}'>{body_html}</p>"
                               f"</div><br>")
             # Add to history only when displayed
