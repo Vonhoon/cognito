@@ -78,12 +78,12 @@ class TestToggleInternet(unittest.TestCase):
         self.win.internet_enabled = False
         self.win.game_state = "AWAITING_INTERNET_CONFIRM"
         self.win.pending_prompt = "Please calculate the flux"
-        self.win.generate_aura_response.return_value = "Response from Aura"
+        self.win.generate_aura_response.return_value = ("Response from Aura", False)
 
         CognitoWindow.toggle_internet(self.win)
 
         self.win.generate_aura_response.assert_called()
-        self.win.display_aura_message.assert_called_with("Response from Aura")
+        self.win.display_aura_message.assert_called_with("Response from Aura", allow_html=False)
         self.win.mcp_button.setEnabled.assert_called_with(True)
         # Verify _update_button_style was called for mcp_button
         self.win._update_button_style.assert_any_call(self.win.mcp_button, self.win.mcp_enabled)
@@ -92,7 +92,7 @@ class TestToggleInternet(unittest.TestCase):
         self.win.internet_enabled = False
         self.win.game_state = "AWAITING_INTERNET_CONFIRM"
         self.win.pending_prompt = "Hello"
-        self.win.generate_aura_response.return_value = "Response from Aura"
+        self.win.generate_aura_response.return_value = ("Response from Aura", False)
 
         CognitoWindow.toggle_internet(self.win)
 

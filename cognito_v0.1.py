@@ -898,8 +898,11 @@ class CognitoWindow(QtWidgets.QMainWindow):
         self.history.append(f"User: {text}")
 
 
-    def display_aura_message(self, text, style_override=""):
+    def display_aura_message(self, text, style_override="", allow_html=False):
         """Displays AURA message with specific styling."""
+        if not allow_html:
+            text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
         # Basic styling: different background, green text, aligned right
         base_style = (f"margin: 2px 5px 2px 100px; padding: 8px 12px;"
                       f" background-color: {COLOR_BACKGROUND_WIDGET};" # Dark widget background
@@ -1252,8 +1255,8 @@ class CognitoWindow(QtWidgets.QMainWindow):
             # If we were waiting for internet, process the pending prompt
             if self.game_state == "AWAITING_INTERNET_CONFIRM":
                 print("Internet enabled, processing pending prompt (if any).")
-                aura_response = self.generate_aura_response("User enabled internet access", internal_trigger=True, trigger_context="internet_enabled")
-                if aura_response: self.display_aura_message(aura_response)
+                aura_response, is_html = self.generate_aura_response("User enabled internet access", internal_trigger=True, trigger_context="internet_enabled")
+                if aura_response: self.display_aura_message(aura_response, allow_html=is_html)
                 # Check if MCP should now be enabled (based on pending prompt)
                 if self.pending_prompt:
                      prompt_lower = self.pending_prompt.lower()
@@ -1290,8 +1293,8 @@ class CognitoWindow(QtWidgets.QMainWindow):
             # If we were waiting for MCP, process the pending prompt
             if self.game_state == "AWAITING_MCP_CONFIRM":
                 print("MCP enabled, processing pending prompt.")
-                aura_response = self.generate_aura_response("User enabled MCP access", internal_trigger=True, trigger_context="mcp_enabled")
-                if aura_response: self.display_aura_message(aura_response)
+                aura_response, is_html = self.generate_aura_response("User enabled MCP access", internal_trigger=True, trigger_context="mcp_enabled")
+                if aura_response: self.display_aura_message(aura_response, allow_html=is_html)
                 # State should change to NORMAL_ALL_PERMISSIONS inside generate_aura_response
                 # The send_prompt function will handle the scare trigger on the *next* user input
         else: # MCP Disabled
@@ -1318,12 +1321,12 @@ class CognitoWindow(QtWidgets.QMainWindow):
         # Lock input if in DEBUGGING mode *after* the bug has been selected, until removed
         if self.game_state == "DEBUGGING" and self.bug_is_selected and not self.yell_completed:
              print("DEBUG: Input locked during DEBUGGING post-selection / pre-removal.")
-             self.display_aura_message(f"<span style='color:{COLOR_TEXT_RED};'>// INPUT LOCK ACTIVE //</span>", style_override="font-style:italic;")
+             self.display_aura_message(f"<span style='color:{COLOR_TEXT_RED};'>// INPUT LOCK ACTIVE //</span>", style_override="font-style:italic;", allow_html=True)
              return
         # Also lock if Dev Mode is open AND button is visible (means yell finished but button not clicked)
         if self.game_state == "DEBUGGING" and self.dev_dock.isVisible() and self.delete_bug_button and self.delete_bug_button.isVisible():
              print("DEBUG: Input locked post-yell, waiting for fragment removal.")
-             self.display_aura_message(f"<span style='color:{COLOR_TEXT_AMBER};'>// SYSTEM FOCUS ON FRAGMENT //</span>", style_override="font-style:italic;")
+             self.display_aura_message(f"<span style='color:{COLOR_TEXT_AMBER};'>// SYSTEM FOCUS ON FRAGMENT //</span>", style_override="font-style:italic;", allow_html=True)
              return
 
         # 2. Get and display user input
@@ -1385,7 +1388,7 @@ class CognitoWindow(QtWidgets.QMainWindow):
 
         # 5. Normal Response Generation Path
         print(f"Proceeding with normal response generation for state: {original_state}")
-        aura_response = self.generate_aura_response(user_text)
+        aura_response, is_html = self.generate_aura_response(user_text)
         self.prompt_count += 1 # Increment global prompt count
 
         # Increment post-MCP counter only if MCP is actually enabled
@@ -1399,7 +1402,7 @@ class CognitoWindow(QtWidgets.QMainWindow):
 
         # 6. Display Response (if any)
         if aura_response:
-            self.display_aura_message(aura_response) # Adds to history internally
+            self.display_aura_message(aura_response, allow_html=is_html) # Adds to history internally
 
         # 7. Post-Response State Updates & Status (Some handled within generate_aura_response or scares)
         # Check if state *changed* during generation (e.g., AWAITING -> NORMAL)
@@ -1426,7 +1429,7 @@ class CognitoWindow(QtWidgets.QMainWindow):
             # Add other states here if needed
 
         # Generate the response using the current (expected) state
-        aura_response = self.generate_aura_response(user_text)
+        aura_response, is_html = self.generate_aura_response(user_text)
         self.prompt_count += 1 # Count this processed prompt globally
 
         # Increment post-MCP count if applicable (should be for UNEASY state)
@@ -1436,7 +1439,7 @@ class CognitoWindow(QtWidgets.QMainWindow):
 
 
         if aura_response:
-            self.display_aura_message(aura_response)
+            self.display_aura_message(aura_response, allow_html=is_html)
 
 
     def generate_aura_response(self, user_prompt, internal_trigger=False, trigger_context=None):
@@ -1591,9 +1594,14 @@ class CognitoWindow(QtWidgets.QMainWindow):
 
         # --- Perform LLM Call or use Pre-scripted Response ---
         response_text = None
+        is_html = False # Default to plain text
+
         if not use_llm:
             print(f"Using pre-scripted response: '{pre_scripted_response}'")
             response_text = pre_scripted_response
+            # Check for specific HTML responses
+            if current_state == "HOSTILE" and pre_scripted_response == self.tr('MALWARE_DETECTED'):
+                 is_html = True
         elif use_llm and self.llm_model:
             # Combine system instruction, language hint, and user prompt for the LLM
             lang_instruction = self.tr('RESPOND_LANG')
@@ -1644,6 +1652,7 @@ class CognitoWindow(QtWidgets.QMainWindow):
                  print(f"Error calling LLM API: {e}")
                  # Format the error message for display
                  response_text = self.tr('CONN_ERROR').format(e=str(e))
+                 is_html = True
 
             self.statusBar.showMessage(self.tr('STATUS_RESPONSE_RECVD'), 2000) # Show briefly
 
@@ -1651,7 +1660,7 @@ class CognitoWindow(QtWidgets.QMainWindow):
             print("LLM required but not available. Using placeholder.")
             response_text = self.tr('PLACEHOLDER_OFFLINE').format(prompt=prompt_for_llm)
 
-        return response_text
+        return response_text, is_html
 
 
     # --- Context Menu Slot ---
