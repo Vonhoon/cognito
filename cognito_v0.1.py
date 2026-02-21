@@ -782,8 +782,6 @@ class CognitoWindow(QtWidgets.QMainWindow):
 
     def display_top(self):
         """Displays the initial greeting or the mission briefing."""
-        # Clear previous content potentially? Or just append? Let's append.
-        # self.chat_display.clear() # Uncomment if you want to replace content
 
         cursor = self.chat_display.textCursor()
         cursor.movePosition(QtGui.QTextCursor.MoveOperation.End)
