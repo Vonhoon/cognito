@@ -298,6 +298,8 @@ class LanguageSelectionDialog(QtWidgets.QDialog):
 
 
 class CognitoWindow(QtWidgets.QMainWindow):
+    YELL_KEYS = ['YELL_MSG_1', 'YELL_MSG_2', 'YELL_MSG_3', 'YELL_MSG_4', 'YELL_MSG_5']
+
     def __init__(self, language='en'):
         super().__init__()
         self.language = language
@@ -1154,8 +1156,7 @@ class CognitoWindow(QtWidgets.QMainWindow):
     def yell_sequence_update(self):
         """Called by timer: displays yell message, shakes window, flashes."""
         self.yell_intensity += 1
-        yell_keys = ['YELL_MSG_1', 'YELL_MSG_2', 'YELL_MSG_3', 'YELL_MSG_4', 'YELL_MSG_5']
-        msg = self.tr(random.choice(yell_keys))
+        msg = self.tr(random.choice(self.YELL_KEYS))
 
         # Calculate font size - make it large and possibly increase with intensity
         # Clamp max size to avoid becoming ridiculously huge
